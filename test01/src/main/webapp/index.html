@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<script type="text/javascript" src="json2.js"></script>
+<script>
+function getXmlHttpRequest(){
+	if(window.XMLHttpRequest)
+		return new XMLHttpRequest();
+	else
+		return null;
+}
+
+function Record(name, uuid, state, cpu, timeWork, quantity){
+		this.name = name;
+		this.uuid = uuid;
+		this.state = state;
+		this.cpu = cpu;
+		this.timeWork = timeWork;
+		this.quantity = quantity;
+
+}
+
+function post(name,state){
+		// Создание объъекта записи
+//		var app = "{name:WAVE; uuid:7b2f75b2-d17a-4e38-8b8f-f11d4c092797; state:UP; cpu:10%; timeWork:25; quantity:5}";
+//		var app = "WAVE 7b2f75b2-d17a-4e38-8b8f-f11d4c092797 UP 10% 25 5";
+		var c = Math.floor(Math.random() * 100);
+		var t = Math.floor(Math.random() * 100);
+		var s = Math.floor(Math.random() * 50);
+		var app = new Record(name, "7b2f75b2-d17a-4e38-8b8f-f11d4c092797", state, c, t, s);
+		var json = JSON.stringify(app);
+		var req = getXmlHttpRequest();
+			req.onreadystatechange = function(){
+				if (req.readyState != 4) {
+					return;
+				}
+				console.log(req.readText);
+			};
+			req.open("POST", "Service", true);
+			req.setRequestHeader("Content-Type", "text/plain");
+			req.send(json);
+
+
+}
+
+function get(){
+	var req = getXmlHttpRequest();
+	req.onreadystatechange = function(){
+		if (req.readyState != 4) {
+			return;
+		}
+		console.log(req.readText);
+	};
+	req.open("GET", "Service?sort=date", true);
+	req.send(null);
+}
+</script>
+<body>
+	<button onclick = "post('WAVE','UP')">Нажми!!! POST-1</button>	
+	<button onclick = "post('APPLET','STARTING...')">Нажми!!! POST-2</button>
+	<button onclick = "post('TEXT','UP')">Нажми!!! POST-3</button>
+	<button onclick = "get('date')">Нажми!!! GET-1</button>
+	<form action="Service">
+	<input type="hidden" name= "sort" value="cpu">
+	<input type="text" name = "minCpu">
+	<input type="text" name = "maxCpu">
+	<input type="submit" value="Отправить">
+	</form>
+
+	<button onclick = "get('cpu')">Нажми!!! GET-2</button>
+	<div id="div"></div>
+</body>
+</html>
