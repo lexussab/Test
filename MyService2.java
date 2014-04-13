@@ -38,13 +38,11 @@ public class MyService2 extends HttpServlet {
 		Gson gson = new Gson();
 		switch(param){	
 			case "date":			
-				
-				
 				PrintWriter out = response.getWriter();
 				String json = gson.toJson(sortDate(stateMap));
-		     	out.print(json);
-		     	out.flush();
-		     	out.close();
+		     		out.print(json);
+		     		out.flush();
+		     		out.close();
 				break;
 			case "cpu" :
 				String minC = request.getParameter("minCpu");
@@ -54,13 +52,13 @@ public class MyService2 extends HttpServlet {
 
 				PrintWriter out2 = response.getWriter();
 				String json2 = gson.toJson(sortCpu(stateMap,minCpu,maxCpu));
-		     	out2.print(json2);
-		     	out2.flush();
-		     	out2.close();
+		     		out2.print(json2);
+		     		out2.flush();
+		     		out2.close();
 		     	
-		     	System.out.println("-----------------");
-		     	for(Record r:listCpu)
-		     		System.out.println(r.toString());
+		     		System.out.println("-----------------");
+		     		for(Record r:listCpu)
+		     			System.out.println(r.toString());
 				
 				break;
 			}
