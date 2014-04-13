@@ -33,6 +33,7 @@ public class MyService2 extends HttpServlet {
 		String param = request.getParameter("sort");
 
 		switch(param){	
+<<<<<<< HEAD
 			case "date":
 				ArrayList<Record> listUp = new ArrayList<Record>();
 				
@@ -76,6 +77,14 @@ public class MyService2 extends HttpServlet {
 		     	out.print(listUp);
 		     	out.flush();
 		     	out.close();
+=======
+			case "date":			
+				PrintWriter out = response.getWriter();
+				String json = gson.toJson(sortDate(stateMap));
+		     		out.print(json);
+		     		out.flush();
+		     		out.close();
+>>>>>>> 845d21c6eba8f6e47963ea0699c745ee213a8cd4
 				break;
 				
 			case "cpu" :
@@ -110,9 +119,21 @@ public class MyService2 extends HttpServlet {
 				});
 				
 				PrintWriter out2 = response.getWriter();
+<<<<<<< HEAD
 		     	out2.print(listCpu);
 		     	out2.flush();
 		     	out2.close();
+=======
+				String json2 = gson.toJson(sortCpu(stateMap,minCpu,maxCpu));
+		     		out2.print(json2);
+		     		out2.flush();
+		     		out2.close();
+		     	
+		     		System.out.println("-----------------");
+		     		for(Record r:listCpu)
+		     			System.out.println(r.toString());
+				
+>>>>>>> 845d21c6eba8f6e47963ea0699c745ee213a8cd4
 				break;
 			}
 	}
