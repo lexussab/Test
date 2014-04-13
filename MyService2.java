@@ -23,11 +23,7 @@ public class MyService2 extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
 	//Создание хранилища данных
-	ArrayList<Record> list = new ArrayList<Record>();
-	Map<String,List<Record>> mapIn = new HashMap<String, List<Record>>();
 	Map<String, Map<String,List<Record>>> stateMap = new HashMap<String, Map<String,List<Record>>>();
-	ArrayList<Record> listUp = new ArrayList<Record>();
-	ArrayList<Record> listCpu = new ArrayList<Record>();
 	
     public MyService2() {}
 
@@ -35,33 +31,88 @@ public class MyService2 extends HttpServlet {
 		
 		//Чтение параметров запроса
 		String param = request.getParameter("sort");
-		Gson gson = new Gson();
+
 		switch(param){	
-			case "date":			
+			case "date":
+				ArrayList<Record> listUp = new ArrayList<Record>();
 				
+				//Отсекаем по статусу
+				//проходим по основной карте
+				for(Entry<String, Map<String,List<Record>>> entryOut: stateMap.entrySet()){
+					//проходим по вложенной карте
+					for(Entry<String,List<Record>> entryIn: entryOut.getValue().entrySet()){
+						int i = entryIn.getValue().size();
+						List<Record> list = entryIn.getValue();
+						//записываем во внешний лист последнее значение инстанса с заданным условием UP
+						while(i != 0){
+							if (list.get(i).getState().equals("UP")){
+								listUp.add(list.get(i));
+								break;
+							}else{
+								i--;
+							}
+						}
+						
+							
+					
+					}
+				}
+				
+				Collections.sort(listUp, new Comparator<Record>(){
+					@Override
+				    public int compare(Record rec1, Record rec2){
+						int cpu1 = rec1.getCpu();
+						int cpu2 = rec2.getCpu();
+						
+						if (cpu1 > cpu2) return 1;
+						else if (cpu1 < cpu2) return -1;
+						else if (cpu1 == cpu2)
+							return 0;
+						return cpu2;
+				    }
+				});				
 				
 				PrintWriter out = response.getWriter();
-				String json = gson.toJson(sortDate(stateMap));
-		     	out.print(json);
+		     	out.print(listUp);
 		     	out.flush();
 		     	out.close();
 				break;
+				
 			case "cpu" :
 				String minC = request.getParameter("minCpu");
 				int minCpu = Integer.parseInt(minC);
 				String maxC = request.getParameter("maxCpu");
 				int maxCpu = Integer.parseInt(maxC);
-
+				ArrayList<Record> listCpu = new ArrayList<Record>();
+				
+				//Отсекаем по заданному интервалу
+				for(Entry<String, Map<String,List<Record>>> entryOut : stateMap.entrySet()){
+					for(Entry<String,List<Record>> entryIn : entryOut.getValue().entrySet()){
+						for(Record rec : entryIn.getValue()){
+							if (rec.getCpu() >= minCpu && rec.getCpu() <= maxCpu)
+								listCpu.add(rec);
+						};
+					}
+				}
+				
+				Collections.sort(listCpu, new Comparator<Record>(){
+					@Override
+				    public int compare(Record rec1, Record rec2){
+						int cpu1 = rec1.getCpu();
+						int cpu2 = rec2.getCpu();
+						
+						if (cpu1 > cpu2) return 1;
+						else if (cpu1 < cpu2) return -1;
+						else if (cpu1 == cpu2)
+							return 0;
+						return cpu2;
+				    }
+				});
+				
 				PrintWriter out2 = response.getWriter();
-				String json2 = gson.toJson(sortCpu(stateMap,minCpu,maxCpu));
-		     	out2.print(json2);
+		     	out2.print(listCpu);
 		     	out2.flush();
 		     	out2.close();
-		     	
-		     	System.out.println("-----------------");
-		     	for(Record r:listCpu)
-		     		System.out.println(r.toString());
-				
 				break;
 			}
 	}
@@ -73,11 +124,9 @@ public class MyService2 extends HttpServlet {
 		
 		//Создания объекта JSON
 		Gson gson = new Gson();
-		Collections.synchronizedMap(stateMap);
 		StringBuilder sb = new StringBuilder();
 		String str = null;
 		Date date = new Date();
-		
 		
 		while ((str = reader.readLine()) != null) {
 			sb.append(str);
@@ -89,75 +138,36 @@ public class MyService2 extends HttpServlet {
 		obj.setDateReg(date);
 		
 		//Записываем данные в память
-		list.add(obj);
-		mapIn.put(obj.getUuid(), list);
-		stateMap.put(obj.getName(), mapIn);
+		synchronized(this){
+			if(stateMap.containsKey(obj.getName())){
+				for(Entry<String,Map<String, List<Record>>> entry : stateMap.entrySet()){
+					if (entry.getKey() == obj.getName()){
+						if (entry.getValue().containsKey(obj.getUuid())){
+							for(Entry<String, List<Record>> entry2: entry.getValue().entrySet()){
+								if (entry2.getKey() == obj.getUuid()){
+									entry2.getValue().add(obj);
+								}
+							}
+						}else{
+							ArrayList<Record> list = new ArrayList<Record>();
+							Map<String,List<Record>> mapIn = new HashMap<String, List<Record>>();
+							mapIn.put(obj.getUuid(), list);
+							entry.setValue(mapIn);
+						}
+					}
+				}	
+			} else{
+				Map<String,List<Record>> mapIn = new HashMap<String, List<Record>>();
+				ArrayList<Record> list = new ArrayList<Record>();
+				list.add(obj);
+				mapIn.put(obj.getUuid(), list);
+				stateMap.put(obj.getName(), mapIn);
+				}	
+		}
 		
 		PrintWriter out = response.getWriter();
 		out.print("OK");
 		out.flush();
-		out.close();
-				
+		out.close();		
 	}
-	
-	//Сортировка по заданным условиям
-	protected ArrayList<Record> sortDate (Map<String, Map<String,List<Record>>> map){
-		//Отсекаем по статусу
-		for(Entry<String, Map<String,List<Record>>> entryOut: map.entrySet()){
-			for(Entry<String,List<Record>> entryIn: entryOut.getValue().entrySet()){
-				for(Record rec:entryIn.getValue()){
-					if (rec.getState().equals("UP"))
-						listUp.add(rec);
-				};
-			}
-		}
-		
-		Collections.sort(listUp, new Comparator<Record>(){
-			@Override
-		    public int compare(Record rec1, Record rec2){
-				int cpu1 = rec1.getCpu();
-				int cpu2 = rec2.getCpu();
-				
-				if (cpu1 > cpu2) return 1;
-				else if (cpu1 < cpu2) return -1;
-				else if (cpu1 == cpu2)
-					return 0;
-				return cpu2;
-		    }
-		});
-	
-		return listUp;
-		
-	}
-	
-	//Создание и сортировка списка в заданном интервале
-	protected ArrayList<Record> sortCpu(Map<String, Map<String,List<Record>>> map, int min, int max){
-		
-		//Отсекаем по заданному интервалу
-		for(Entry<String, Map<String,List<Record>>> entryOut : map.entrySet()){
-			for(Entry<String,List<Record>> entryIn : entryOut.getValue().entrySet()){
-				for(Record rec : entryIn.getValue()){
-					if (rec.getCpu() >= min && rec.getCpu() <= max)
-						listCpu.add(rec);
-				};
-			}
-		}
-		
-		Collections.sort(listCpu, new Comparator<Record>(){
-			@Override
-		    public int compare(Record rec1, Record rec2){
-				int cpu1 = rec1.getCpu();
-				int cpu2 = rec2.getCpu();
-				
-				if (cpu1 > cpu2) return 1;
-				else if (cpu1 < cpu2) return -1;
-				else if (cpu1 == cpu2)
-					return 0;
-				return cpu2;
-		    }
-		});
-		
-		return listCpu;
-	}
-
 }
