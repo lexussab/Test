@@ -84,6 +84,8 @@ public class Service extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// Считаем, что данные передаются в формате JSON например:
+		//{"name":"WAVE","uuid":"7b2f75b2-d17a-4e38-8b8f-10","state":"UP","cpu":70,"timeWork":23,"quantity":19} 
 		
 		//Создание READER
 		BufferedReader reader = request.getReader();
