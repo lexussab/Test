@@ -1,4 +1,4 @@
-package ru.home;
+package ru.smirnov.anton;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -98,7 +98,7 @@ public class Record {
 	public String toString() {
 		
 		return this.getName() + ", " + this.getUuid() + ", " + this.getState() + ", " + 
-			   this.getCpu() + ", " + this.getTimeWork() + ", " + this.getQuantity() + ", " + 
+			   this.getCpu() + "%, " + this.getTimeWork() + ", " + this.getQuantity() + ", " + 
 			   this.getDateReg();
 	}
 
