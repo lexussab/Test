@@ -54,9 +54,9 @@ public class Service extends HttpServlet {
 				for(Record rec: listUp){
 		     		out.printf("%d, %s\n", n, rec.toString());
 		     		n++;
-		     	}
-		     	out.flush();
-		     	out.close();
+		     		}
+		     		out.flush();
+		     		out.close();
 				break;
 				
 			case "cpu" :
@@ -85,9 +85,9 @@ public class Service extends HttpServlet {
 				for(Record rec: listCpu){
 		     		out2.printf("%d, %s\n", i, rec.toString());
 		     		i++;
-		     	}
-		     	out2.flush();
-		     	out2.close();
+		     		}
+		     		out2.flush();
+		     		out2.close();
 				break;
 			}
 	}
