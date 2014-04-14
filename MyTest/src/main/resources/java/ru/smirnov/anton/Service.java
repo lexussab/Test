@@ -47,9 +47,14 @@ public class Service extends HttpServlet {
 						}
 					}
 				}
+				//Сортируем коллекцию
 				Collections.sort(listUp,new CompareCPU());
 				PrintWriter out = response.getWriter();
-		     	out.print(listUp);
+				int n = 1;
+				for(Record rec: listUp){
+		     		out.printf("%d, %s\n", n, rec.toString());
+		     		n++;
+		     	}
 		     	out.flush();
 		     	out.close();
 				break;
@@ -76,7 +81,11 @@ public class Service extends HttpServlet {
 				}
 				Collections.sort(listCpu,new CompareCPU());
 				PrintWriter out2 = response.getWriter();
-		     	out2.print(listCpu);
+		     	int i = 1;
+				for(Record rec: listCpu){
+		     		out2.printf("%d, %s\n", i, rec.toString());
+		     		i++;
+		     	}
 		     	out2.flush();
 		     	out2.close();
 				break;
