@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -19,56 +17,37 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 
-public class MyService2 extends HttpServlet {
+public class Service extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-	//Создание хранилища данных
-	Map<String, Map<String,List<Record>>> stateMap = new HashMap<String, Map<String,List<Record>>>();
+	//Создание хранилища данных. Ключом для внешней карты будет служить имя приложения
+	//ключом для второй UUID инстанса.
+	Map<String, Map<String,Record>> stateMap = new HashMap<String, Map<String,Record>>();
 	
-    public MyService2() {}
+    public Service() {}
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		//Чтение параметров запроса
 		String param = request.getParameter("sort");
-
 		switch(param){	
-			case "date":
+			case "date":		
 				ArrayList<Record> listUp = new ArrayList<Record>();
 				
-				//Отсекаем по статусу
+				//Выбираем записи со статусом UP
 				//проходим по основной карте
-				for(Entry<String, Map<String,List<Record>>> entryOut: stateMap.entrySet()){
+				for(Entry<String, Map<String,Record>> entry: stateMap.entrySet()){
 					//проходим по вложенной карте
-					for(Entry<String,List<Record>> entryIn: entryOut.getValue().entrySet()){
-						int i = entryIn.getValue().size();
-						List<Record> list = entryIn.getValue();
-						//записываем во внешний лист последнее значение инстанса с заданным условием UP
-						while(i != 0){
-							if (list.get(i).getState().equals("UP")){
-								listUp.add(list.get(i));
-								break;
-							}else{
-								i--;
-							}
-						}		
+					for(Entry<String,Record> entryIn: entry.getValue().entrySet()){
+						//записываем во внешний лист значение инстанса с заданным условием
+						Record rec = entryIn.getValue();
+						if (rec.getState().equals("UP")){
+								System.out.println(rec);
+								listUp.add(rec);
+						}
 					}
 				}
-				
-				Collections.sort(listUp, new Comparator<Record>(){
-					@Override
-				    public int compare(Record rec1, Record rec2){
-						int cpu1 = rec1.getCpu();
-						int cpu2 = rec2.getCpu();
-						
-						if (cpu1 > cpu2) return 1;
-						else if (cpu1 < cpu2) return -1;
-						else if (cpu1 == cpu2)
-							return 0;
-						return cpu2;
-				    }
-				});				
-				
+				Collections.sort(listUp,new CompareCPU());
 				PrintWriter out = response.getWriter();
 		     		out.print(listUp);
 		     		out.flush();
@@ -82,30 +61,20 @@ public class MyService2 extends HttpServlet {
 				int maxCpu = Integer.parseInt(maxC);
 				ArrayList<Record> listCpu = new ArrayList<Record>();
 				
-				//Отсекаем по заданному интервалу
-				for(Entry<String, Map<String,List<Record>>> entryOut : stateMap.entrySet()){
-					for(Entry<String,List<Record>> entryIn : entryOut.getValue().entrySet()){
-						for(Record rec : entryIn.getValue()){
-							if (rec.getCpu() >= minCpu && rec.getCpu() <= maxCpu)
-								listCpu.add(rec);
-						};
+				//Выбираем записи со статусом UP
+				//проходим по основной карте
+				for(Entry<String, Map<String,Record>> entry: stateMap.entrySet()){
+					//проходим по вложенной карте
+					for(Entry<String,Record> entryIn: entry.getValue().entrySet()){
+						//записываем во внешний лист значение инстанса с заданным условием
+						Record rec = entryIn.getValue();
+						if (rec.getCpu() >= minCpu && rec.getCpu() <= maxCpu){
+							listCpu.add(rec);
+							System.out.println(rec);		
+						}
 					}
 				}
-				
-				Collections.sort(listCpu, new Comparator<Record>(){
-					@Override
-				    public int compare(Record rec1, Record rec2){
-						int cpu1 = rec1.getCpu();
-						int cpu2 = rec2.getCpu();
-						
-						if (cpu1 > cpu2) return 1;
-						else if (cpu1 < cpu2) return -1;
-						else if (cpu1 == cpu2)
-							return 0;
-						return cpu2;
-				    }
-				});
-				
+				Collections.sort(listCpu,new CompareCPU());
 				PrintWriter out2 = response.getWriter();
 		     		out2.print(listCpu);
 		     		out2.flush();
@@ -118,47 +87,34 @@ public class MyService2 extends HttpServlet {
 		
 		//Создание READER
 		BufferedReader reader = request.getReader();
-		
+				
 		//Создания объекта JSON
 		Gson gson = new Gson();
 		StringBuilder sb = new StringBuilder();
 		String str = null;
 		Date date = new Date();
-		
+				
 		while ((str = reader.readLine()) != null) {
 			sb.append(str);
 		}
 		reader.close();
-		
+				
 		//Десериализайия данных и создание объекта статуса
 		Record obj = gson.fromJson(sb.toString(), Record.class);
-		obj.setDateReg(date);
+		obj.setDateReg(date);		
 		
 		//Записываем данные в память
 		synchronized(this){
-			//Проверка на содержание ключа,если есть:
+			//Проверка на наличие приложения с таким же именем
 			if(stateMap.containsKey(obj.getName())){
-				for(Entry<String,Map<String, List<Record>>> entry : stateMap.entrySet()){
-					if (entry.getKey() == obj.getName()){
-						if (entry.getValue().containsKey(obj.getUuid())){
-							for(Entry<String, List<Record>> entry2: entry.getValue().entrySet()){
-								if (entry2.getKey() == obj.getUuid()){
-									entry2.getValue().add(obj);
-								}
-							}
-						}else{
-							ArrayList<Record> list = new ArrayList<Record>();
-							Map<String,List<Record>> mapIn = new HashMap<String, List<Record>>();
-							mapIn.put(obj.getUuid(), list);
-							entry.setValue(mapIn);
-						}
+				for(Entry<String,Map<String, Record>> entry : stateMap.entrySet()){
+					if (entry.getKey().equals(obj.getName())){	
+						entry.getValue().put(obj.getUuid(), obj);
 					}
-				}	
-			} else{ //если нет, создаем все полностью
-				Map<String,List<Record>> mapIn = new HashMap<String, List<Record>>();
-				ArrayList<Record> list = new ArrayList<Record>();
-				list.add(obj);
-				mapIn.put(obj.getUuid(), list);
+				}
+			} else{
+				Map<String,Record> mapIn = new HashMap<String, Record>();
+				mapIn.put(obj.getUuid(), obj);
 				stateMap.put(obj.getName(), mapIn);
 				}	
 		}
@@ -166,6 +122,6 @@ public class MyService2 extends HttpServlet {
 		PrintWriter out = response.getWriter();
 		out.print("OK");
 		out.flush();
-		out.close();		
-	}
+		out.close();			
+	}			
 }
