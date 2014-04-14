@@ -42,7 +42,6 @@ public class Service extends HttpServlet {
 						//записываем во внешний лист значение инстанса с заданным условием
 						Record rec = entryIn.getValue();
 						if (rec.getState().equals("UP")){
-								System.out.println(rec);
 								listUp.add(rec);
 						}
 					}
@@ -75,13 +74,12 @@ public class Service extends HttpServlet {
 						Record rec = entryIn.getValue();
 						if (rec.getCpu() >= minCpu && rec.getCpu() <= maxCpu){
 							listCpu.add(rec);
-							System.out.println(rec);		
 						}
 					}
 				}
 				Collections.sort(listCpu,new CompareCPU());
 				PrintWriter out2 = response.getWriter();
-		     	int i = 1;
+		     		int i = 1;
 				for(Record rec: listCpu){
 		     		out2.printf("%d, %s\n", i, rec.toString());
 		     		i++;
