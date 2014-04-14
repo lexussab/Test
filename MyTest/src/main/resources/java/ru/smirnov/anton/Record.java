@@ -84,10 +84,8 @@ public class Record {
 		this.quantity = quantity;
 	}
 
-	public String getDateReg() {
-		//Формат вывода даты с милисекундами
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		return dateFormat.format(dateReg);
+	public Date getDateReg() {	
+		return dateReg;
 	}
 
 	public void setDateReg(Date dateReg) {
@@ -96,10 +94,12 @@ public class Record {
 	
 	@Override
 	public String toString() {
+		//Р¤РѕСЂРјР°С‚ РІС‹РІРѕРґР° РґР°С‚С‹ СЃ РјРёР»РёСЃРµРєСѓРЅРґР°РјРё
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		
 		return this.getName() + ", " + this.getUuid() + ", " + this.getState() + ", " + 
 			   this.getCpu() + "%, " + this.getTimeWork() + ", " + this.getQuantity() + ", " + 
-			   this.getDateReg();
+			   dateFormat.format(this.getDateReg());
 	}
 
 }
